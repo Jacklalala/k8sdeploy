@@ -1,0 +1,15 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-redis
+  namespace: dev
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: redis
+  resources:
+    requests:
+      storage: 20Gi
+  selector:
+    matchLabels:
+      alicloud-pvname: pv-redis

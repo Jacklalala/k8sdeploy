@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: redis
+  template:
+    metadata:
+      labels:
+        name: redis
+    spec:
+      serviceAccount: admin
+      priorityClassName: system-node-critical
+      containers:
+      - name: redis-6379
+        image: redis:6.0.6
+        volumeMounts:
+        - name: configmap-volume
+          mountPath: /usr/local/etc/redis/redis_6379.conf
+          subPath: redis_6379.conf
+        - name: redis-6379
+          mountPath: "/data"
+        command:
+          - "redis-server"
+        args:
+          - /usr/local/etc/redis/redis_6379.conf
+      volumes:
+      - name: configmap-volume
+        configMap:
+          name: redis-config
+          items:
+          - key: redis_6379.conf
+            path: redis_6379.conf
+      - name: redis-6379
+        persistentVolumeClaim:
+          claimName: pvc-redis  # 这里填写pvc的名称
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: redis-service
+ labels:
+   name: redis-service
+ namespace: dev
+spec:
+ type: ClusterIP  
+ ports:
+ - port: 6379
+   protocol: TCP
+   targetPort: 6379
+   name: redis-6379
+ selector:
+   name: redis   # 这里填写Deployment/metadata/name 的值

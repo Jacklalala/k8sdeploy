@@ -1,0 +1,15 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-mongo
+  namespace: dev
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: mongo
+  resources:
+    requests:
+      storage: 20Gi
+  selector:
+    matchLabels:
+      alicloud-pvname: pv-mongo

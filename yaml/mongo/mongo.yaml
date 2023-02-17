@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: dev
+spec:
+  serviceName: "mongo"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      serviceAccount: mongo-admin
+      priorityClassName: system-node-critical
+      containers:
+      - name: mongo
+        image: mongo:5.0.3
+        imagePullPolicy:  IfNotPresent
+        ports:
+        - containerPort: 27017
+          name: mongo
+        volumeMounts:
+          - name: mongo-data
+            mountPath:  /data/db
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: pvc-mongo
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: dev
+spec:
+  type: ClusterIP
+  selector:
+    app: mongo
+  ports:
+  - name: mongo
+    port: 27017  #mongo的service暴露给其他服务的端口
+    protocol: TCP
+    targetPort: 27017 #指向容器暴露的端口

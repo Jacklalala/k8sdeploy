@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: dev
+spec:
+  serviceName: "mysql"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      serviceAccount: mysql-admin
+      priorityClassName: system-node-critical
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        imagePullPolicy:  IfNotPresent
+        envFrom:
+          - configMapRef:
+              name: mysql-config
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+          - name: mysql-data
+            mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: pvc-mysql
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: dev
+spec:
+  type: ClusterIP
+  selector:
+    app: mysql
+  ports:
+  - name: mysql
+    port: 3306  #postgres的service暴露给其他服务的端口
+    protocol: TCP
+    targetPort: 3306 #指向容器暴露的端口
